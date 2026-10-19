@@ -16,7 +16,7 @@
 
 ### Backend
 - **Node.js** + **Express** — REST API сервер
-- **PostgreSQL** + **Prisma** (або MongoDB + Mongoose) — база даних та ORM
+- **PostgreSQL (Neon)** + **Prisma** — serverless база даних та ORM
 - **JWT** — аутентифікація
 - **Jest** + **Supertest** — тестування
 
@@ -56,6 +56,12 @@ npm run dev            # Vite dev server
 - **Commit convention**: `feat:`, `fix:`, `docs:`, `refactor:`, `test:`, `chore:`
 - **Code review**: мінімум 1 approve перед merge
 
+## 🔐 Автентифікація
+
+JWT видається при signup/signin і передається у httpOnly cookie `token` (вимога ТЗ), а також у тілі відповіді.
+Захищені маршрути читають токен з cookie, а за його відсутності — із заголовка `Authorization: Bearer <token>` (сумісність із клієнтом).
+Logout очищає cookie і анулює токен у БД. Налаштування cookie/CORS: `CLIENT_URL`, `COOKIE_SECURE`, `COOKIE_SAME_SITE`.
+
 ## 👥 Розподіл ролей
 
 Проєкт розрахований на команду з 2 осіб. Усі учасники беруть участь у написанні коду (Fullstack підхід) із закріпленими зонами відповідальності:
@@ -63,4 +69,4 @@ npm run dev            # Vite dev server
 | Учасник | Технічні обов'язки | Організаційна роль |
 | :--- | :--- | :--- |
 | **Денис Ужвенко** | Backend (API, аутентифікація, БД), DevOps (деплой, CI/CD), Smoke-тести | Team Lead (архітектурні рішення, фінальний рев'ю) |
-| **Тіммейт (TBA / у процесі пошуку)** | Frontend (інтерфейс, адаптивна верстка, роутинг, клієнтський стан), QA | GitHub Projects Owner (ведення таск-дошки, контроль спринтів) |
+| **Дмитро Мінков** | Frontend (інтерфейс, адаптивна верстка, роутинг, клієнтський стан), QA | GitHub Projects Owner (ведення таск-дошки, контроль спринтів) |

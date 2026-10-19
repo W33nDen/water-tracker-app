@@ -1,3 +1,4 @@
+const bcrypt = require('bcryptjs');
 const prisma = require('../src/config/prisma');
 
 async function main() {
@@ -22,10 +23,12 @@ async function main() {
   const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
   const twoHoursAgo = new Date(now.getTime() - 2 * 60 * 60 * 1000);
 
+  const hashedPassword = await bcrypt.hash('password123', 10);
+
   const testUser = await prisma.user.create({
     data: {
       email: 'test@example.com',
-      password: 'password123',
+      password: hashedPassword,
       name: 'Test User',
       gender: 'female',
       dailyNorma: 2000,
