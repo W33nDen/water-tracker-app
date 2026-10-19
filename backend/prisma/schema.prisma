@@ -18,6 +18,7 @@ model User {
   gender       String        @default("female")
   avatarUrl    String?
   dailyNorma   Int           @default(2000)
+  token        String?
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   waterRecords WaterRecord[]
