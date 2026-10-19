@@ -99,7 +99,21 @@ const login = async (email, password) => {
   };
 };
 
+/**
+ * Logs out user by clearing the session token in the database.
+ *
+ * @param {string} userId
+ * @returns {Promise<void>}
+ */
+const logout = async (userId) => {
+  await prisma.user.update({
+    where: { id: userId },
+    data: { token: null },
+  });
+};
+
 module.exports = {
   register,
   login,
+  logout,
 };

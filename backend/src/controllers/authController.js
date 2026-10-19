@@ -1,5 +1,5 @@
 const authService = require('../services/authService');
-const { setAuthCookie } = require('../helpers/authCookie');
+const { setAuthCookie, clearAuthCookie } = require('../helpers/authCookie');
 
 /**
  * Handles user registration.
@@ -25,7 +25,17 @@ const signin = async (req, res) => {
   res.status(200).json(result);
 };
 
+/**
+ * Handles user logout.
+ */
+const logout = async (req, res) => {
+  await authService.logout(req.userId);
+  clearAuthCookie(res);
+  res.status(204).send();
+};
+
 module.exports = {
   signup,
   signin,
+  logout,
 };

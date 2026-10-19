@@ -1,5 +1,6 @@
 const express = require('express');
 const validateBody = require('../middlewares/validateBody');
+const authenticate = require('../middlewares/authenticate');
 const { authSchema } = require('../schemas/authSchemas');
 const authController = require('../controllers/authController');
 
@@ -28,5 +29,15 @@ router.post('/signup', validateBody(authSchema), authController.signup);
  *   401 - Unauthorized (wrong email or password)
  */
 router.post('/signin', validateBody(authSchema), authController.signin);
+
+/**
+ * @route POST /api/auth/logout
+ * @desc Log out current user
+ * @access Private
+ * @responses
+ *   204 - No Content
+ *   401 - Unauthorized
+ */
+router.post('/logout', authenticate, authController.logout);
 
 module.exports = router;
