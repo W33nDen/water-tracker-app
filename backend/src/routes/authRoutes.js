@@ -17,4 +17,16 @@ const router = express.Router();
  */
 router.post('/signup', validateBody(authSchema), authController.signup);
 
+/**
+ * @route POST /api/auth/signin
+ * @desc Log in an existing user
+ * @access Public
+ * @body { email, password }
+ * @responses
+ *   200 - OK { token, user }
+ *   400 - Validation error
+ *   401 - Unauthorized (wrong email or password)
+ */
+router.post('/signin', validateBody(authSchema), authController.signin);
+
 module.exports = router;

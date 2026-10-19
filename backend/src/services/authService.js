@@ -54,6 +54,52 @@ const register = async (email, password) => {
   };
 };
 
+/**
+ * Authenticates an existing user.
+ *
+ * @param {string} email
+ * @param {string} password
+ * @returns {Promise<{ token: string, user: object }>}
+ */
+const login = async (email, password) => {
+  const normalizedEmail = email.trim().toLowerCase();
+
+  const user = await prisma.user.findUnique({
+    where: { email: normalizedEmail },
+  });
+
+  if (!user) {
+    throw HttpError(401, 'Email or password is wrong');
+  }
+
+  const isPasswordValid = await bcrypt.compare(password, user.password);
+  if (!isPasswordValid) {
+    throw HttpError(401, 'Email or password is wrong');
+  }
+
+  const token = jwt.sign({ id: user.id }, config.jwtSecret, {
+    expiresIn: config.jwtExpiresIn,
+  });
+
+  // Update session token in database, invalidating previous session
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { token },
+  });
+
+  return {
+    token,
+    user: {
+      email: user.email,
+      name: user.name,
+      gender: user.gender,
+      dailyNorma: user.dailyNorma,
+      avatarUrl: user.avatarUrl,
+    },
+  };
+};
+
 module.exports = {
   register,
+  login,
 };
