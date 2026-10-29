@@ -1,25 +1,35 @@
-import { Link } from 'react-router-dom';
+import useAuthStore from '../store/authStore';
+import Logo from './Logo';
+import UserAuth from './UserAuth';
+import UserLogo from './UserLogo';
 
+/**
+ * Header — top navigation bar.
+ *
+ * Unauthorized state → Logo + UserAuth (Sign In button)
+ * Authorized   state → Logo + UserLogo (avatar / initials + dropdown)
+ *
+ * Responsive breakpoints (tailwind.config.js):
+ *   mobile  320px | tablet 768px | desktop 1440px
+ */
 function Header() {
+  const isLoggedIn = useAuthStore((s) => s.isLoggedIn);
+
   return (
-    <header className="flex items-center justify-between px-5 py-4 shadow-sm">
-      <Link to="/" className="text-xl font-bold text-blue-500">
-        WaterTracker
-      </Link>
-      <nav className="flex gap-4">
-        <Link
-          to="/signin"
-          className="text-sm font-medium text-gray-600 hover:text-blue-500 transition-colors"
-        >
-          Sign In
-        </Link>
-        <Link
-          to="/signup"
-          className="rounded-lg bg-blue-500 px-4 py-2 text-sm font-medium text-white hover:bg-blue-600 transition-colors"
-        >
-          Sign Up
-        </Link>
-      </nav>
+    <header
+      className="sticky top-0 z-40 w-full border-b border-gray-200 bg-white"
+    >
+      <div
+        className="
+          mx-auto flex items-center justify-between
+          px-5 py-3
+          tablet:px-8 tablet:py-4
+          desktop:max-w-[1440px] desktop:px-16
+        "
+      >
+        <Logo />
+        {isLoggedIn ? <UserLogo /> : <UserAuth />}
+      </div>
     </header>
   );
 }
