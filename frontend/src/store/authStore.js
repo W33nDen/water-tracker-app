@@ -6,11 +6,11 @@ import { create } from 'zustand';
  * Do NOT add those here.
  *
  * Token persistence strategy:
- *  - localStorage['token'] → plain string  (read by api.js interceptor)
+ *  - localStorage['token'] → plain string  (read by api.js interceptor as-is)
  *  - localStorage['user']  → JSON string   (hydrated on app start)
  */
 
-// Hydrate from localStorage on module load (before first render)
+// ── Hydrate from localStorage on module load (before first render) ────────
 const storedToken = localStorage.getItem('token') ?? null;
 const storedUser = (() => {
   try {
@@ -24,15 +24,15 @@ const storedUser = (() => {
 const useAuthStore = create((set) => ({
   /** @type {{ email: string, name: string|null, avatarUrl: string|null } | null} */
   user: storedUser,
-  /** @type {string | null} */
+  /** @type {string | null} — plain string, matches api.js interceptor */
   token: storedToken,
-  /** Derived from token presence */
+  /** Derived: true when a token is present */
   isLoggedIn: Boolean(storedToken),
 
   /**
    * Persist auth data to store + localStorage.
    * @param {{ email: string, name: string|null, avatarUrl: string|null }} user
-   * @param {string} token — plain string, stored as-is under key 'token'
+   * @param {string} token  — stored as plain string under key 'token'
    */
   setAuth: (user, token) => {
     localStorage.setItem('token', token);
@@ -52,4 +52,3 @@ const useAuthStore = create((set) => ({
 }));
 
 export default useAuthStore;
-

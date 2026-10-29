@@ -1,17 +1,46 @@
+/* ─── Water Tracker colour palette (Figma UI-Kit) ─────────────────────────
+   Primary:
+     #FFFFFF  – background / white text on filled buttons
+     #2F2F2F  – body text
+     #407BFF  – main blue (--color-primary already set)
+
+   Secondary:
+     #ECF2FF  – light-blue cards / backgrounds
+     #9EBBFF  – additional blue (--color-secondary already set)
+     #D7E3FF  – pale-blue dividers
+     #FF9D43  – orange accent / hover on text-buttons
+     #EF5050  – red / destructive actions
+
+   All values already declared in the existing :root block are preserved.
+   New tokens are added below.
+──────────────────────────────────────────────────────────────────────────── */
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
+  /* ── Primary ── */
   --color-primary: #407bff;
-  --color-secondary: #9ebbff;
-  --color-background: #ffffff;
+  --color-white: #ffffff;
   --color-text: #2f2f2f;
-  --color-error: #ef4444;
+
+  /* ── Secondary (existing) ── */
+  --color-secondary: #9ebbff;
+
+  /* ── Secondary (new, from Figma UI-Kit) ── */
+  --color-bg-light: #ecf2ff;       /* light-blue card backgrounds */
+  --color-divider: #d7e3ff;        /* pale-blue dividers */
+  --color-accent-orange: #ff9d43;  /* hover on text-buttons */
+  --color-error: #ef5050;          /* destructive / error red  */
+
+  /* ── Legacy alias kept for backwards compat ── */
+  --color-background: #ffffff;
   --color-success: #22c55e;
 }
 
 body {
-  @apply bg-white text-gray-800 antialiased;
+  @apply bg-white antialiased;
+  color: var(--color-text);
   font-family: 'Roboto', sans-serif;
 }
