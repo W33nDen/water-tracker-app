@@ -3,69 +3,51 @@ import { Link } from 'react-router-dom';
 /**
  * UserAuth — shown in Header when the user is NOT logged in.
  *
- * Figma ref: Desktop Main page, node #1059:30011
+ * Figma ref: «Tracker of water Sign In» / «UI-Kit»
  *   row, gap: 8px, alignItems: center
- *   ├── TEXT "Sign in"  Regular 18px #407BFF
- *   └── IMAGE-SVG "user/outline"  28×28px
+ *   ├── TEXT "Sign in" Regular 18px #407BFF
+ *   └── IMAGE-SVG "user/outline" 28×28px
  *
  * Hover state (Figma «Desktop UI Element» → Text Button 1):
  *   Normal: #407BFF
- *   Hover:  #FF9D43  (Secondary color/5)
+ *   Hover:  #FF9D43
  */
 function UserAuth() {
   return (
     <Link
       to="/signin"
-      className="group flex items-center gap-2 transition-colors"
+      className="group flex items-center gap-2 cursor-pointer transition-colors text-[#407BFF] hover:text-[#FF9D43]"
       aria-label="Sign in"
     >
-      {/* "Sign in" text — 18px Regular #407BFF → hover #FF9D43 */}
       <span
-        className="transition-colors"
         style={{
           fontFamily: 'Roboto, sans-serif',
           fontWeight: 400,
           fontSize: '18px',
           lineHeight: '24px',
-          color: 'inherit',
         }}
       >
         Sign in
       </span>
 
-      {/* user/outline icon 28×28  (Figma node 1059:30013 / 1059:30123) */}
+      {/* user/outline 28x28 */}
       <svg
         width="28"
         height="28"
-        viewBox="0 0 24 24"
+        viewBox="0 0 28 28"
         fill="none"
         aria-hidden="true"
         xmlns="http://www.w3.org/2000/svg"
-        style={{ flexShrink: 0 }}
+        className="stroke-current flex-shrink-0"
       >
-        <g clipPath="url(#user-clip)">
-          <path
-            d="M23.5 12C23.5 18.3513 18.3513 23.5 12 23.5C5.64873 23.5 0.5 18.3513 0.5 12C0.5 5.64873 5.64873 0.5 12 0.5C18.3513 0.5 23.5 5.64873 23.5 12Z"
-            stroke="currentColor"
-          />
-          <path
-            d="M15.0004 7.07692C15.0004 7.89297 14.6843 8.6756 14.1216 9.25263C13.5589 9.82967 12.7958 10.1538 12 10.1538C11.2042 10.1538 10.4411 9.82967 9.8784 9.25263C9.31571 8.6756 8.9996 7.89297 8.9996 7.07692C8.9996 6.26087 9.31571 5.47824 9.8784 4.90121C10.4411 4.32417 11.2042 4 12 4C12.7958 4 13.5589 4.32417 14.1216 4.90121C14.6843 5.47824 15.0004 6.26087 15.0004 7.07692ZM6 18.6609C6.02571 17.0464 6.66916 15.507 7.79158 14.3746C8.914 13.2422 10.4255 12.6076 12 12.6076C13.5745 12.6076 15.086 13.2422 16.2084 14.3746C17.3308 15.507 17.9743 17.0464 18 18.6609C16.1177 19.5461 14.0708 20.0029 12 20C9.85891 20 7.82664 19.5208 6 18.6609Z"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            stroke="currentColor"
-          />
-        </g>
-        <defs>
-          <clipPath id="user-clip">
-            <rect width="24" height="24" fill="white" />
-          </clipPath>
-        </defs>
+        <circle cx="14" cy="14" r="13.5" stroke="currentColor" />
+        <path
+          d="M17.5 8.5C17.5 9.42826 17.1313 10.3185 16.4749 10.9749C15.8185 11.6313 14.9283 12 14 12C13.0717 12 12.1815 11.6313 11.5251 10.9749C10.8687 10.3185 10.5 9.42826 10.5 8.5C10.5 7.57174 10.8687 6.68152 11.5251 6.02513C12.1815 5.36875 13.0717 5 14 5C14.9283 5 15.8185 5.36875 16.4749 6.02513C17.1313 6.68152 17.5 7.57174 17.5 8.5ZM7 21.5C7.03 19.65 7.77 17.89 9.05 16.6C10.33 15.31 12.05 14.58 13.85 14.58C15.65 14.58 17.37 15.31 18.65 16.6C19.93 17.89 20.67 19.65 20.7 21.5"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
       </svg>
-
-      <style>{`
-        .group { color: #407BFF; }
-        .group:hover { color: #FF9D43; }
-      `}</style>
     </Link>
   );
 }
