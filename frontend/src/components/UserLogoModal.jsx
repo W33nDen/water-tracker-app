@@ -20,15 +20,19 @@ import api from '../services/api';
  *     https://github.com/W33nDen/water-tracker-app/issues/8
  *   • Logout → POST /api/auth/logout → clear store + localStorage → /welcome
  */
-function UserLogoModal({ onClose }) {
+function UserLogoModal({ onClose, anchorRef }) {
   const modalRef = useRef(null);
   const navigate = useNavigate();
   const logout = useAuthStore((s) => s.logout);
 
   /* ── Close on outside click ─────────────────────────────────────────── */
+  // "Outside" means outside the whole UserLogo block (anchorRef), not just the
+  // menu — otherwise pressing the toggle button closes the menu on mousedown
+  // and its click handler immediately re-opens it.
   useEffect(() => {
     function handleMouseDown(e) {
-      if (modalRef.current && !modalRef.current.contains(e.target)) {
+      const container = anchorRef?.current ?? modalRef.current;
+      if (container && !container.contains(e.target)) {
         onClose();
       }
     }

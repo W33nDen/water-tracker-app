@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import useAuthStore from '../store/authStore';
 import UserLogoModal from './UserLogoModal';
 
@@ -32,12 +32,13 @@ function getInitial(user) {
 function UserLogo() {
   const user = useAuthStore((s) => s.user);
   const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef(null);
 
   const initial = getInitial(user);
   const displayName = user?.name ?? user?.email ?? '';
 
   return (
-    <div className="relative">
+    <div ref={containerRef} className="relative">
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
@@ -106,7 +107,7 @@ function UserLogo() {
       </button>
 
       {isOpen && (
-        <UserLogoModal onClose={() => setIsOpen(false)} />
+        <UserLogoModal anchorRef={containerRef} onClose={() => setIsOpen(false)} />
       )}
     </div>
   );
