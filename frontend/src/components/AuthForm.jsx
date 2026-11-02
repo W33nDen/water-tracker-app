@@ -1,10 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { signinSchema, signupSchema } from '../schemas/authSchemas';
-import eyeIcon from '../assets/eye.svg';
-import eyeSlashIcon from '../assets/eye-slash.svg';
+import Field from './FormField';
 
 const CONFIG = {
   signin: {
@@ -20,68 +19,6 @@ const CONFIG = {
     switchTo: { to: '/signin', label: 'Sign in' },
   },
 };
-
-const inputBase =
-  'w-full rounded-md border bg-white px-2.5 py-3 font-roboto text-base leading-5 text-primary ' +
-  'placeholder:text-secondary focus:outline-none transition-colors';
-
-function inputClass(hasError) {
-  return `${inputBase} ${
-    hasError
-      ? 'border-error text-error placeholder:text-error focus:border-error'
-      : 'border-divider focus:border-primary'
-  }`;
-}
-
-function FieldError({ id, message }) {
-  if (!message) return null;
-  return (
-    <p id={id} role="alert" className="font-roboto text-sm leading-[18px] text-error">
-      {message}
-    </p>
-  );
-}
-
-/**
- * Text field with label + inline validation error.
- * `type="password"` adds a show/hide toggle (hidden by default).
- */
-function Field({ id, label, type = 'text', placeholder, error, registration, autoComplete }) {
-  const [visible, setVisible] = useState(false);
-  const isPassword = type === 'password';
-  const errorId = `${id}-error`;
-
-  return (
-    <div className="flex flex-col gap-2">
-      <label htmlFor={id} className="font-roboto text-lg leading-6 text-text">
-        {label}
-      </label>
-      <div className="relative">
-        <input
-          id={id}
-          type={isPassword && visible ? 'text' : type}
-          placeholder={placeholder}
-          autoComplete={autoComplete}
-          aria-invalid={error ? 'true' : 'false'}
-          aria-describedby={error ? errorId : undefined}
-          className={`${inputClass(Boolean(error))} ${isPassword ? 'pr-10' : ''}`}
-          {...registration}
-        />
-        {isPassword && (
-          <button
-            type="button"
-            onClick={() => setVisible((v) => !v)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 transition-opacity hover:opacity-70"
-            aria-label={visible ? 'Hide password' : 'Show password'}
-          >
-            <img src={visible ? eyeIcon : eyeSlashIcon} alt="" aria-hidden="true" className="h-5 w-5" />
-          </button>
-        )}
-      </div>
-      <FieldError id={errorId} message={error?.message} />
-    </div>
-  );
-}
 
 /**
  * AuthForm — shared Sign In / Sign Up form (issue #6).

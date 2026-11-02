@@ -43,6 +43,16 @@ const useAuthStore = create((set, get) => ({
   },
 
   /**
+   * Replace (or patch) the cached profile — after avatar upload or profile edit (issue #8).
+   * @param {object} updates — fields to merge into the current user
+   */
+  updateUser: (updates) => {
+    const user = { ...get().user, ...updates };
+    localStorage.setItem('user', JSON.stringify(user));
+    set({ user });
+  },
+
+  /**
    * Fetch the current user's profile with the saved token.
    * 401 → the interceptor calls logout(); other errors (offline, 5xx)
    * keep the cached session so a flaky network doesn't log the user out.
