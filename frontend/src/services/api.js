@@ -32,12 +32,27 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     const { response, config } = error;
-    const sentToken = Boolean(config?.headers?.Authorization);
     // /auth/* 401s mean "wrong credentials" or "already logged out" — not a dead session.
     const isAuthEndpoint = config?.url?.startsWith('/auth/');
 
-    if (response?.status === 401 && sentToken && !isAuthEndpoint) {
-      onUnauthorized?.();
+    if (response?.status === 401 && !isAuthEndpoint) {
+      const rawHeader =
+        typeof config?.headers?.get === 'function'
+          ? config.headers.get('Authorization')
+          : (config?.headers?.Authorization || config?.headers?.authorization);
+
+      const sentToken = typeof rawHeader === 'string'
+        ? rawHeader.replace(/^Bearer\s+/i, '').trim()
+        : null;
+
+      const currentToken = localStorage.getItem('token');
+
+      // Only expire session if the 401 was returned for the currently active token.
+      // Stale 401 responses from a previous session must not log out a new session,
+      // and if the user is already logged out, no action is needed.
+      if (currentToken && sentToken === currentToken) {
+        onUnauthorized?.();
+      }
     }
     return Promise.reject(error);
   }

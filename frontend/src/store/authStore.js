@@ -48,12 +48,13 @@ const useAuthStore = create((set, get) => ({
    * keep the cached session so a flaky network doesn't log the user out.
    */
   refreshUser: async () => {
-    if (!get().token || get().isRefreshing) return;
+    const tokenAtStart = get().token;
+    if (!tokenAtStart || get().isRefreshing) return;
     set({ isRefreshing: true });
     try {
       const { data: user } = await api.get('/users/current');
-      // Ignore the response if the user logged out while it was in flight
-      if (!get().token) return;
+      // Apply the profile only if the session hasn't changed while the request was in flight.
+      if (!get().token || get().token !== tokenAtStart) return;
       localStorage.setItem('user', JSON.stringify(user));
       set({ user });
     } catch {
