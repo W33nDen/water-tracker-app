@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -74,7 +74,7 @@ function Field({ id, label, type = 'text', placeholder, error, registration, aut
             className="absolute right-3 top-1/2 -translate-y-1/2 transition-opacity hover:opacity-70"
             aria-label={visible ? 'Hide password' : 'Show password'}
           >
-            <img src={visible ? eyeSlashIcon : eyeIcon} alt="" aria-hidden="true" className="h-5 w-5" />
+            <img src={visible ? eyeIcon : eyeSlashIcon} alt="" aria-hidden="true" className="h-5 w-5" />
           </button>
         )}
       </div>
@@ -94,12 +94,21 @@ function AuthForm({ mode, onSubmit }) {
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    watch,
+    trigger,
+    formState: { errors, isSubmitting, touchedFields },
   } = useForm({
     resolver: yupResolver(schema),
     defaultValues: defaults,
     mode: 'onTouched', // validate on blur, then live while correcting
   });
+
+  const passwordValue = watch('password');
+  useEffect(() => {
+    if (mode === 'signup' && touchedFields.repeatPassword) {
+      void trigger('repeatPassword');
+    }
+  }, [mode, passwordValue, trigger, touchedFields.repeatPassword]);
 
   return (
     <div className="w-full">
