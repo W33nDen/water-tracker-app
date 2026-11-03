@@ -28,6 +28,17 @@ export default {
         btn: '0px 4px 8px 0px rgba(64, 123, 255, 0.34)',
         'btn-hover': '0px 4px 14px 0px rgba(64, 123, 255, 0.54)',
       },
+      keyframes: {
+        'fade-in': { from: { opacity: '0' }, to: { opacity: '1' } },
+        'modal-in': {
+          from: { opacity: '0', transform: 'translateY(8px) scale(0.98)' },
+          to: { opacity: '1', transform: 'translateY(0) scale(1)' },
+        },
+      },
+      animation: {
+        'fade-in': 'fade-in 200ms ease-out',
+        'modal-in': 'modal-in 200ms ease-out',
+      },
     },
   },
   plugins: [],

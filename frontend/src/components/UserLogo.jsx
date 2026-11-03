@@ -1,17 +1,8 @@
 import { useRef, useState } from 'react';
 import useAuthStore from '../store/authStore';
 import UserLogoModal from './UserLogoModal';
-
-/**
- * Returns the avatar initials fallback character.
- * Priority (issue #5, §3): name first letter → email first letter → '?'
- */
-function getInitial(user) {
-  if (!user) return '?';
-  if (user.name) return user.name.charAt(0).toUpperCase();
-  if (user.email) return user.email.charAt(0).toUpperCase();
-  return '?';
-}
+import SettingModal from './SettingModal';
+import { getInitial } from '../utils/getInitial';
 
 /**
  * UserLogo — shown in Header when the user IS logged in.
@@ -32,6 +23,7 @@ function getInitial(user) {
 function UserLogo() {
   const user = useAuthStore((s) => s.user);
   const [isOpen, setIsOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const containerRef = useRef(null);
 
   const initial = getInitial(user);
@@ -107,8 +99,14 @@ function UserLogo() {
       </button>
 
       {isOpen && (
-        <UserLogoModal anchorRef={containerRef} onClose={() => setIsOpen(false)} />
+        <UserLogoModal
+          anchorRef={containerRef}
+          onClose={() => setIsOpen(false)}
+          onOpenSettings={() => setIsSettingsOpen(true)}
+        />
       )}
+
+      {isSettingsOpen && <SettingModal onClose={() => setIsSettingsOpen(false)} />}
     </div>
   );
 }

@@ -16,11 +16,10 @@ import api from '../services/api';
  * Behaviours:
  *   • Closes on click outside (mousedown on document)
  *   • Closes on Escape key
- *   • Settings — TODO: open SettingModal (issue #8)
- *     https://github.com/W33nDen/water-tracker-app/issues/8
+ *   • Settings → opens SettingModal (issue #8)
  *   • Logout → POST /api/auth/logout → clear store + localStorage → /welcome
  */
-function UserLogoModal({ onClose, anchorRef }) {
+function UserLogoModal({ onClose, anchorRef, onOpenSettings }) {
   const modalRef = useRef(null);
   const navigate = useNavigate();
   const logout = useAuthStore((s) => s.logout);
@@ -51,9 +50,8 @@ function UserLogoModal({ onClose, anchorRef }) {
 
   /* ── Handlers ──────────────────────────────────────────────────────── */
   function handleSettings() {
-    // TODO: Open SettingModal — will be implemented in issue #8
-    // https://github.com/W33nDen/water-tracker-app/issues/8
     onClose();
+    onOpenSettings?.();
   }
 
   async function handleLogout() {
