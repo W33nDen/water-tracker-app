@@ -2,7 +2,7 @@ const express = require('express');
 const authenticate = require('../middlewares/authenticate');
 const validateBody = require('../middlewares/validateBody');
 const { uploadSingle } = require('../middlewares/upload');
-const { editUserSchema } = require('../schemas/usersSchemas');
+const { editUserSchema, waterRateSchema } = require('../schemas/usersSchemas');
 const usersController = require('../controllers/usersController');
 
 const router = express.Router();
@@ -43,5 +43,22 @@ router.patch('/avatar', authenticate, uploadSingle('avatar'), usersController.up
  *   409 - Email in use
  */
 router.patch('/edit', authenticate, validateBody(editUserSchema), usersController.updateProfile);
+
+/**
+ * @route PATCH /api/users/water-rate
+ * @desc Update daily water intake rate (in milliliters, 1..15000 ml)
+ * @access Private
+ * @body { dailyNorma: number }
+ * @responses
+ *   200 - OK { email, name, gender, dailyNorma, avatarUrl }
+ *   400 - Validation error (invalid body / dailyNorma out of range)
+ *   401 - Unauthorized
+ */
+router.patch(
+  '/water-rate',
+  authenticate,
+  validateBody(waterRateSchema),
+  usersController.updateWaterRate
+);
 
 module.exports = router;

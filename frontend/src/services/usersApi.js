@@ -23,3 +23,12 @@ export async function updateProfileRequest(changes) {
   const { data } = await api.patch('/users/edit', changes);
   return data;
 }
+
+/**
+ * PATCH /api/users/water-rate → updated public user with new dailyNorma (in ml)
+ * @param {number} dailyNorma - Daily water intake rate in milliliters (1..15000)
+ */
+export async function updateWaterRateRequest(dailyNorma) {
+  const { data } = await api.patch('/users/water-rate', { dailyNorma });
+  return data;
+}

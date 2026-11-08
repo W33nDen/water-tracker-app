@@ -344,4 +344,86 @@ describe('Users Endpoints Integration Tests', () => {
       expect(res.statusCode).toBe(401);
     });
   });
+
+  describe('PATCH /api/users/water-rate', () => {
+    it('should update dailyNorma in DB and return updated public user (200)', async () => {
+      const { email, token } = await createUser('water_rate_ok');
+
+      const res = await request(app)
+        .patch('/api/users/water-rate')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ dailyNorma: 2500 });
+
+      expect(res.statusCode).toBe(200);
+      expect(res.body.dailyNorma).toBe(2500);
+      expect(res.body.email).toBe(email);
+      expect(res.body).not.toHaveProperty('password');
+      expect(res.body).not.toHaveProperty('token');
+
+      const userInDb = await prisma.user.findUnique({ where: { email } });
+      expect(userInDb.dailyNorma).toBe(2500);
+
+      const current = await request(app)
+        .get('/api/users/current')
+        .set('Authorization', `Bearer ${token}`);
+      expect(current.body.dailyNorma).toBe(2500);
+    });
+
+    it('should return 400 when dailyNorma exceeds limit (15001)', async () => {
+      const { token } = await createUser('water_rate_exceed');
+
+      const res = await request(app)
+        .patch('/api/users/water-rate')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ dailyNorma: 15001 });
+
+      expect(res.statusCode).toBe(400);
+    });
+
+    it('should return 400 for missing field, non-numeric string, float, 0, or negative values', async () => {
+      const { token } = await createUser('water_rate_invalid');
+
+      // missing field
+      const resMissing = await request(app)
+        .patch('/api/users/water-rate')
+        .set('Authorization', `Bearer ${token}`)
+        .send({});
+      expect(resMissing.statusCode).toBe(400);
+
+      // non-numeric string "abc"
+      const resAbc = await request(app)
+        .patch('/api/users/water-rate')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ dailyNorma: 'abc' });
+      expect(resAbc.statusCode).toBe(400);
+
+      // float 2.5 (non-integer)
+      const resFloat = await request(app)
+        .patch('/api/users/water-rate')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ dailyNorma: 2.5 });
+      expect(resFloat.statusCode).toBe(400);
+
+      // 0 (min is 1)
+      const resZero = await request(app)
+        .patch('/api/users/water-rate')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ dailyNorma: 0 });
+      expect(resZero.statusCode).toBe(400);
+
+      // -100
+      const resNeg = await request(app)
+        .patch('/api/users/water-rate')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ dailyNorma: -100 });
+      expect(resNeg.statusCode).toBe(400);
+    });
+
+    it('should return 401 without a token', async () => {
+      const res = await request(app)
+        .patch('/api/users/water-rate')
+        .send({ dailyNorma: 2000 });
+      expect(res.statusCode).toBe(401);
+    });
+  });
 });

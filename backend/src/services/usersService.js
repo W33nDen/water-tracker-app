@@ -70,7 +70,23 @@ const updateProfile = async (userId, { name, gender, email, oldPassword, passwor
   });
 };
 
+/**
+ * Updates user's daily water intake rate (dailyNorma in milliliters).
+ *
+ * @param {string} userId
+ * @param {number} dailyNorma
+ * @returns {Promise<object>} public user fields
+ */
+const updateWaterRate = async (userId, dailyNorma) => {
+  return prisma.user.update({
+    where: { id: userId },
+    data: { dailyNorma },
+    select: publicUserSelect,
+  });
+};
+
 module.exports = {
   updateAvatar,
   updateProfile,
+  updateWaterRate,
 };
