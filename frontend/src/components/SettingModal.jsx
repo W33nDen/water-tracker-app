@@ -47,7 +47,9 @@ function SettingModal({ onClose }) {
     register,
     handleSubmit,
     setError,
-    formState: { errors, isSubmitting },
+    watch,
+    trigger,
+    formState: { errors, isSubmitting, isSubmitted },
   } = useForm({
     resolver: yupResolver(settingsSchema),
     defaultValues: initialValues,
@@ -56,6 +58,15 @@ function SettingModal({ onClose }) {
     mode: 'onSubmit',
     reValidateMode: 'onChange',
   });
+
+  // Re-validate repeatPassword whenever `password` changes — but only after the
+  // first Save attempt (isSubmitted), so the error never appears on the empty form.
+  const passwordValue = watch('password');
+  useEffect(() => {
+    if (isSubmitted) {
+      void trigger('repeatPassword');
+    }
+  }, [passwordValue, isSubmitted, trigger]);
 
   /* ── Escape, scroll lock, initial focus ─────────────────────────────── */
   useEffect(() => {
