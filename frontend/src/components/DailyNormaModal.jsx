@@ -19,8 +19,9 @@ const fieldLabel = 'font-roboto text-base leading-5 text-text';
  * M = body weight in kg, T = active sport time in hours.
  */
 function calculateWaterRate(gender, weight, activityTime) {
-  const m = Number(weight) || 0;
-  const t = Number(activityTime) || 0;
+  const toNum = (v) => Number(String(v ?? '').trim().replace(',', '.')) || 0;
+  const m = toNum(weight);
+  const t = toNum(activityTime);
   if (m <= 0) return 0;
   const factorM = gender === 'male' ? 0.04 : 0.03;
   const factorT = gender === 'male' ? 0.6 : 0.4;
@@ -76,18 +77,59 @@ function DailyNormaModal({ onClose }) {
     watchedActivityTime
   );
 
-  /* ── Escape key, scroll lock, initial focus ──────────────────────────── */
+  /* ── Escape key, focus trap, initial focus & restore ────────────────── */
   useEffect(() => {
+    const previousFocus = document.activeElement;
+
     function handleKeyDown(e) {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') {
+        onClose();
+        return;
+      }
+
+      if (e.key === 'Tab') {
+        const dialog = dialogRef.current;
+        if (!dialog) return;
+
+        const focusableSelector =
+          'button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+        const focusableElements = Array.from(
+          dialog.querySelectorAll(focusableSelector)
+        ).filter((el) => el.offsetParent !== null || el.getClientRects().length > 0);
+
+        if (focusableElements.length === 0) {
+          e.preventDefault();
+          return;
+        }
+
+        const firstElement = focusableElements[0];
+        const lastElement = focusableElements[focusableElements.length - 1];
+
+        if (e.shiftKey) {
+          if (document.activeElement === firstElement || !dialog.contains(document.activeElement)) {
+            e.preventDefault();
+            lastElement.focus();
+          }
+        } else {
+          if (document.activeElement === lastElement || !dialog.contains(document.activeElement)) {
+            e.preventDefault();
+            firstElement.focus();
+          }
+        }
+      }
     }
+
     document.addEventListener('keydown', handleKeyDown);
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     dialogRef.current?.focus({ preventScroll: true });
+
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
       document.body.style.overflow = prevOverflow;
+      if (previousFocus && typeof previousFocus.focus === 'function' && document.contains(previousFocus)) {
+        previousFocus.focus();
+      }
     };
   }, [onClose]);
 
@@ -182,7 +224,7 @@ function DailyNormaModal({ onClose }) {
             {/* Gender radio */}
             <div className="flex gap-6">
               {[
-                { value: 'female', label: 'For girl' },
+                { value: 'female', label: 'For woman' },
                 { value: 'male', label: 'For man' },
               ].map((opt) => (
                 <label

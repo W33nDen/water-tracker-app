@@ -11,7 +11,7 @@ const parseNumber = (val, orig) => {
 const parseWaterRate = (val, orig) => {
   if (typeof orig === 'string') {
     const normalized = orig.trim().replace(',', '.');
-    return normalized === '' ? NaN : Number(normalized);
+    return normalized === '' ? undefined : Number(normalized);
   }
   return val;
 };
