@@ -20,6 +20,15 @@ const editUserSchema = Joi.object({
     'object.and': 'Both oldPassword and password are required to change the password',
   });
 
+/**
+ * PATCH /api/users/water-rate
+ * Daily water intake rate in milliliters (1..15000 ml).
+ */
+const waterRateSchema = Joi.object({
+  dailyNorma: Joi.number().integer().min(1).max(15000).required(),
+});
+
 module.exports = {
   editUserSchema,
+  waterRateSchema,
 };

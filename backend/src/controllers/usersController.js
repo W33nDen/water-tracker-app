@@ -28,8 +28,17 @@ const updateProfile = async (req, res) => {
   res.status(200).json(user);
 };
 
+/**
+ * Updates daily water rate (in milliliters) and returns the updated public user.
+ */
+const updateWaterRate = async (req, res) => {
+  const user = await usersService.updateWaterRate(req.userId, req.body.dailyNorma);
+  res.status(200).json(user);
+};
+
 module.exports = {
   getCurrent,
   updateAvatar,
   updateProfile,
+  updateWaterRate,
 };
