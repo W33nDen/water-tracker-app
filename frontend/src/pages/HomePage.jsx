@@ -9,7 +9,7 @@ import useWaterStore from '../store/waterStore';
  * HomePage — main application page (issue #9, #10).
  *
  * Layout follows Figma «Home screen Tracker of water»:
- *   Desktop: DailyNorma | WaterRatioPanel + TodayWaterList (side by side)
+ *   Desktop: DailyNorma | WaterRatioPanel (bar + Add Water row, ~592px, measured ~590±20 design px from the mockup (unverified, not frame-grounded)) + TodayWaterList (side by side)
  *   Tablet/Mobile: stacked vertically
  */
 function HomePage() {
@@ -34,13 +34,13 @@ function HomePage() {
       {/* Main grid: WaterRatioPanel + TodayWaterList */}
       <div className="flex flex-col gap-6 desktop:flex-row desktop:items-start">
         {/* Left column — ratio panel */}
-        <div className="w-full desktop:max-w-[280px]">
+        <div className="w-full desktop:max-w-[592px]">
           <WaterRatioPanel onAddWater={openAdd} />
         </div>
 
         {/* Right column — today's list */}
         <div className="flex-1">
-          <TodayWaterList onEdit={openEdit} onDelete={handleDelete} />
+          <TodayWaterList onEdit={openEdit} onDelete={handleDelete} onAdd={openAdd} />
         </div>
       </div>
 
