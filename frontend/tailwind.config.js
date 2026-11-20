@@ -27,6 +27,7 @@ export default {
       boxShadow: {
         btn: '0px 4px 8px 0px rgba(64, 123, 255, 0.34)',
         'btn-hover': '0px 4px 14px 0px rgba(64, 123, 255, 0.54)',
+        card: '0px 4px 14px 0px rgba(64, 123, 255, 0.30)',
       },
       keyframes: {
         'fade-in': { from: { opacity: '0' }, to: { opacity: '1' } },
