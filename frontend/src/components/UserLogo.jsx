@@ -27,6 +27,7 @@ function UserLogo() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isLogoutOpen, setIsLogoutOpen] = useState(false);
   const containerRef = useRef(null);
+  const avatarButtonRef = useRef(null);
 
   const initial = getInitial(user);
   const displayName = user?.name ?? user?.email ?? '';
@@ -34,6 +35,7 @@ function UserLogo() {
   return (
     <div ref={containerRef} className="relative">
       <button
+        ref={avatarButtonRef}
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
         className="flex items-center gap-2 cursor-pointer focus:outline-none"
@@ -111,7 +113,12 @@ function UserLogo() {
 
       {isSettingsOpen && <SettingModal onClose={() => setIsSettingsOpen(false)} />}
 
-      {isLogoutOpen && <UserLogoutModal onClose={() => setIsLogoutOpen(false)} />}
+      {isLogoutOpen && (
+        <UserLogoutModal
+          onClose={() => setIsLogoutOpen(false)}
+          returnFocusRef={avatarButtonRef}
+        />
+      )}
     </div>
   );
 }

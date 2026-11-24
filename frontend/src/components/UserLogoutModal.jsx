@@ -12,93 +12,173 @@ import api from '../services/api';
  *   node #1059:26784 (Desktop), #1059:30809 (Tablet), #1059:34363 (Mobile)
  *
  * Layout (layout_7145797b / layout_26008762):
- *   • Padding:        32px 24px  (all breakpoints)
- *   • Gap:            24px       (between title-row, subtitle, buttons-row)
+ *   • Padding:        32px 24px (px-6 py-8 on all breakpoints)
+ *   • Gap:            24px between title-row, subtitle, and buttons-row
  *   • Border-radius:  10px
- *   • Background:     #FFFFFF    (fill_658ab2fa = Primery Color/White)
+ *   • Background:     #FFFFFF (fill_658ab2fa = Primery Color/White)
  *
  * Title "Log out" (style_7a68d8ff):
- *   • Roboto Medium 500, 26px, lineHeight 32px, color #2F2F2F
+ *   • Roboto Medium 500, 26px, lineHeight 32px, text-text (#2F2F2F)
  *
  * Subtitle "Do you really want to leave?" (style_dd7b6a41, EL-aaf55997):
- *   • Roboto Medium 500, 18px, lineHeight 20px, color #2F2F2F
+ *   • Roboto Medium 500, 18px, lineHeight 20px, text-text (#2F2F2F)
  *
- * Buttons (layout_09d6db9c / layout_19e3c9be):
- *   • Desktop/Tablet: row, gap 24px — Cancel left, Log out right
- *   • Mobile:         column, center, gap 24px — Log out top, Cancel bottom
- *   • Cancel  (EL-3cc236a5): bg #D7E3FF (Secondary color / 5), padding 10px 30px desktop / 8px 30px mobile
- *   • Log out (EL-0d4558db): bg #EF5050 (Secondary color/3),   padding same, shadow 0px 4px 8px 0px rgba(64,123,255,0.34)
+ * Buttons:
+ *   • Desktop/Tablet: row, gap-6 (24px), aligned to start (tablet:justify-start),
+ *                     each button width: 160px (tablet:w-40), centered text.
+ *                     Cancel is left, Log out is right.
+ *   • Mobile (320px): column, centered, full width (w-full).
+ *                     Log out is on top (order-first), Cancel is on bottom (order-last).
+ *   • Cancel:         bg-divider (#D7E3FF), text-primary (#407BFF), rounded-[10px].
+ *                     Padding: 8px 30px mobile, 10px 30px tablet/desktop (Figma layout_19e3c9be / layout_09d6db9c).
+ *   • Log out:        bg-error (#EF5050), text-white, shadow-btn, rounded-[10px].
+ *                     Padding: 8px 30px mobile, 10px 30px tablet/desktop.
  *
- * Behaviour:
- *   • Closes on Escape (unless loading)
- *   • Closes on backdrop click (unless loading)
- *   • Logout → POST /api/auth/logout → logout() → navigate('/signin', { replace: true })
- *   • On error: modal stays open, toast.error shown; store NOT cleared (interceptor handles 401)
- *   • Body scroll locked while open; focus returns to opener on close
- *   • Initial focus on Cancel (safe default)
+ * Authentication & Error Handling:
+ *   • Success (204):  logout() clears Zustand store + localStorage, closes modal, navigates to /signin.
+ *   • 401 Response:   server session is already invalid (e.g. session replaced on another device,
+ *                     expired, or logged out in another tab). Since services/api.js skips /auth/* routes,
+ *                     we explicitly handle 401 here: clear local session and redirect to /signin without error toast.
+ *   • Network / 5xx:  server session may still be active. Local state is NOT cleared.
+ *                     Modal stays open, fixed error toast is shown, Log out button is re-enabled for retry.
+ *
+ * Accessibility & Focus Management:
+ *   • Initial focus lands on Cancel button (safe default).
+ *   • Focus trap: Tab/Shift+Tab cycles between ×, Cancel, and Log out buttons.
+ *   • During request (isLoading): all buttons disabled; focus is held on dialog container.
+ *   • On request failure: focus returns to Log out button for quick retry.
+ *   • On dismiss (Cancel, ×, Escape, backdrop): focus returns to avatar button (returnFocusRef).
+ *   • On successful logout: focus return is skipped (page changes).
+ *   • Body scroll is locked while open and restored on unmount.
  */
-function UserLogoutModal({ onClose }) {
+function UserLogoutModal({ onClose, returnFocusRef }) {
   const [isLoading, setIsLoading] = useState(false);
   const logout = useAuthStore((s) => s.logout);
   const navigate = useNavigate();
-  const dialogRef = useRef(null);
-  const cancelBtnRef = useRef(null);
-  // Remember the element that had focus before the modal opened
-  const openerRef = useRef(typeof document !== 'undefined' ? document.activeElement : null);
 
-  /* ── Initial focus on Cancel (safe button) ──────────────────────────── */
+  const dialogRef = useRef(null);
+  const closeBtnRef = useRef(null);
+  const cancelBtnRef = useRef(null);
+  const logoutBtnRef = useRef(null);
+
+  // Stable references for single-setup event listener
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+
+  const isLoadingRef = useRef(isLoading);
+  isLoadingRef.current = isLoading;
+
+  const returnFocusRefStable = useRef(returnFocusRef);
+  returnFocusRefStable.current = returnFocusRef;
+
+  // Flag to avoid returning focus when navigating away on logout
+  const shouldReturnFocusRef = useRef(true);
+
+  /* ── Initial focus on Cancel (safe default) ─────────────────────────── */
   useEffect(() => {
     cancelBtnRef.current?.focus({ preventScroll: true });
   }, []);
 
-  /* ── Escape, body scroll lock, focus return on unmount ─────────────── */
+  /* ── Keydown listener (Escape + Focus Trap) & Body Scroll Lock ───────── */
   useEffect(() => {
-    const prevFocus = openerRef.current;
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
 
     function handleKeyDown(e) {
-      if (e.key === 'Escape' && !isLoading) {
-        onClose();
+      if (e.key === 'Escape') {
+        if (!isLoadingRef.current) {
+          onCloseRef.current();
+        }
+        return;
+      }
+
+      if (e.key === 'Tab') {
+        // While loading, all buttons are disabled; keep focus on dialog container
+        if (isLoadingRef.current) {
+          e.preventDefault();
+          dialogRef.current?.focus({ preventScroll: true });
+          return;
+        }
+
+        const focusable = dialogRef.current
+          ? Array.from(dialogRef.current.querySelectorAll('button:not([disabled])'))
+          : [];
+
+        if (focusable.length === 0) {
+          e.preventDefault();
+          dialogRef.current?.focus({ preventScroll: true });
+          return;
+        }
+
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+
+        if (e.shiftKey) {
+          if (document.activeElement === first || !dialogRef.current?.contains(document.activeElement)) {
+            e.preventDefault();
+            last.focus();
+          }
+        } else {
+          if (document.activeElement === last || !dialogRef.current?.contains(document.activeElement)) {
+            e.preventDefault();
+            first.focus();
+          }
+        }
       }
     }
+
     document.addEventListener('keydown', handleKeyDown);
 
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
       document.body.style.overflow = prevOverflow;
-      // Return focus to the element that opened the modal
-      if (prevFocus && typeof prevFocus.focus === 'function' && document.contains(prevFocus)) {
-        prevFocus.focus();
+
+      // Return focus to the avatar button only on dismissal (not on successful logout)
+      if (shouldReturnFocusRef.current && returnFocusRefStable.current?.current) {
+        returnFocusRefStable.current.current.focus?.();
       }
     };
-  }, [onClose, isLoading]);
+  }, []);
 
   /* ── Logout handler ─────────────────────────────────────────────────── */
   async function handleLogout() {
     if (isLoading) return;
     setIsLoading(true);
+
+    // Keep focus inside dialog while buttons are disabled
+    dialogRef.current?.focus({ preventScroll: true });
+
     try {
       await api.post('/auth/logout');
-      // Clear Zustand store + localStorage (token, user) synchronously,
-      // then navigate so RestrictedRoute on /signin renders the page (not redirect to /home)
+      // 204 Success: server session invalidated
+      shouldReturnFocusRef.current = false;
       logout();
-      onClose();
+      onCloseRef.current();
       navigate('/signin', { replace: true });
     } catch (err) {
-      // Note: a 401 triggers the axios interceptor which calls logout() automatically.
-      // For other errors we keep the modal open and show a toast — state is NOT cleared.
-      const msg =
-        err?.response?.data?.message ||
-        err?.message ||
-        'Logout failed. Please try again.';
-      toast.error(msg);
-    } finally {
+      if (err?.response?.status === 401) {
+        // 401 Unauthorized: server session is already dead.
+        // services/api.js response interceptor skips /auth/* URLs, so we handle it explicitly.
+        shouldReturnFocusRef.current = false;
+        logout();
+        onCloseRef.current();
+        navigate('/signin', { replace: true });
+        return;
+      }
+
+      // Network error or 5xx: server session might still exist.
+      // Do NOT clear local state. Keep modal open so the user can retry.
       setIsLoading(false);
+      toast.error('Logout failed. Please try again.');
+
+      // Return focus to Log out button for quick retry
+      setTimeout(() => {
+        logoutBtnRef.current?.focus();
+      }, 0);
     }
   }
 
-  /* ── Backdrop click (only if click target is the backdrop itself) ───── */
+  /* ── Backdrop click ─────────────────────────────────────────────────── */
   function handleBackdropClick(e) {
     if (e.target === e.currentTarget && !isLoading) {
       onClose();
@@ -117,21 +197,20 @@ function UserLogoutModal({ onClose }) {
         aria-modal="true"
         aria-labelledby="logout-modal-title"
         tabIndex={-1}
-        className="relative w-full max-w-[280px] rounded-[10px] bg-white outline-none animate-modal-in tablet:max-w-[592px]"
-        style={{ padding: '32px 24px' }}
+        className="relative w-full max-w-[280px] rounded-[10px] bg-white px-6 py-8 outline-none animate-modal-in tablet:max-w-[592px]"
       >
         {/* ── Header row: title + × close button ── */}
-        <div className="flex items-center justify-between" style={{ marginBottom: '24px' }}>
+        <div className="mb-6 flex items-center justify-between">
           <h2
             id="logout-modal-title"
-            className="font-roboto font-medium text-text"
-            style={{ fontSize: '26px', lineHeight: '32px' }}
+            className="font-roboto text-[26px] font-medium leading-8 text-text"
           >
             Log out
           </h2>
 
-          {/* x-mark/outline — same SVG path used in SettingModal */}
+          {/* x-mark/outline */}
           <button
+            ref={closeBtnRef}
             type="button"
             onClick={onClose}
             disabled={isLoading}
@@ -151,50 +230,36 @@ function UserLogoutModal({ onClose }) {
         </div>
 
         {/* ── Subtitle ── */}
-        <p
-          className="font-roboto font-medium text-text"
-          style={{ fontSize: '18px', lineHeight: '20px', marginBottom: '24px' }}
-        >
+        <p className="mb-6 font-roboto text-lg font-medium leading-5 text-text">
           Do you really want to leave?
         </p>
 
         {/* ── Buttons ──────────────────────────────────────────────────────
-              Desktop/Tablet: row — Cancel (left) | Log out (right)
-              Mobile:         column, centered — Log out (top) | Cancel (bottom)
-              Using order-* utilities to reorder without changing DOM order
-              (Cancel first in DOM so it gets initial focus via cancelBtnRef)
+              Desktop/Tablet: row, gap 24px (gap-6), aligned to start (tablet:justify-start),
+                              width 160px each (tablet:w-40), centered text.
+                              Cancel (left) | Log out (right).
+              Mobile (320px): column, centered, full width (w-full).
+                              Log out (top, order-first) | Cancel (bottom, order-last).
         ─────────────────────────────────────────────────────────────────── */}
-        <div className="flex flex-col items-center gap-6 tablet:flex-row tablet:justify-center">
+        <div className="flex flex-col items-center gap-6 tablet:flex-row tablet:justify-start">
           {/* Cancel — order-last on mobile (shown below Log out), order-first on tablet+ */}
           <button
             ref={cancelBtnRef}
             type="button"
             onClick={onClose}
             disabled={isLoading}
-            className="order-last w-full rounded-[10px] font-roboto font-medium text-primary transition-opacity hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-50 tablet:order-first tablet:w-auto"
-            style={{
-              backgroundColor: '#D7E3FF',
-              padding: '8px 30px',
-              fontSize: '18px',
-              lineHeight: '24px',
-            }}
+            className="order-last flex w-full items-center justify-center rounded-[10px] bg-divider px-[30px] py-2 font-roboto text-base font-medium leading-6 text-primary transition-opacity hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-50 tablet:order-first tablet:w-40 tablet:py-2.5 tablet:text-lg"
           >
             Cancel
           </button>
 
           {/* Log out — order-first on mobile (shown above Cancel), order-last on tablet+ */}
           <button
+            ref={logoutBtnRef}
             type="button"
             onClick={handleLogout}
             disabled={isLoading}
-            className="order-first w-full rounded-[10px] font-roboto font-medium text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 tablet:order-last tablet:w-auto"
-            style={{
-              backgroundColor: '#EF5050',
-              padding: '8px 30px',
-              fontSize: '18px',
-              lineHeight: '24px',
-              boxShadow: '0px 4px 8px 0px rgba(64, 123, 255, 0.34)',
-            }}
+            className="order-first flex w-full items-center justify-center rounded-[10px] bg-error px-[30px] py-2 font-roboto text-base font-medium leading-6 text-white shadow-btn transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 tablet:order-last tablet:w-40 tablet:py-2.5 tablet:text-lg"
           >
             {isLoading ? 'Logging out…' : 'Log out'}
           </button>
