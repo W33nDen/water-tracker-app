@@ -1,7 +1,4 @@
 import { useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import useAuthStore from '../store/authStore';
-import api from '../services/api';
 
 /**
  * UserLogoModal — dropdown menu triggered by UserLogo.
@@ -17,12 +14,11 @@ import api from '../services/api';
  *   • Closes on click outside (mousedown on document)
  *   • Closes on Escape key
  *   • Settings → opens SettingModal (issue #8)
- *   • Logout → POST /api/auth/logout → clear store + localStorage → /welcome
+ *   • Logout → opens UserLogoutModal (issue #24); actual POST /api/auth/logout
+ *              and redirect to /signin happen inside UserLogoutModal
  */
-function UserLogoModal({ onClose, anchorRef, onOpenSettings }) {
+function UserLogoModal({ onClose, anchorRef, onOpenSettings, onOpenLogout }) {
   const modalRef = useRef(null);
-  const navigate = useNavigate();
-  const logout = useAuthStore((s) => s.logout);
 
   /* ── Close on outside click ─────────────────────────────────────────── */
   // "Outside" means outside the whole UserLogo block (anchorRef), not just the
@@ -54,17 +50,11 @@ function UserLogoModal({ onClose, anchorRef, onOpenSettings }) {
     onOpenSettings?.();
   }
 
-  async function handleLogout() {
-    try {
-      await api.post('/auth/logout');
-    } catch {
-      // Network/server errors are intentionally ignored.
-      // Auth state is always cleared locally regardless of server response.
-    } finally {
-      logout();
-      onClose();
-      navigate('/welcome', { replace: true });
-    }
+  function handleLogout() {
+    // Close the dropdown menu, then open the confirmation modal.
+    // The actual API call, state clearing and navigation happen in UserLogoutModal.
+    onClose();
+    onOpenLogout?.();
   }
 
   /* ── Shared item style ─────────────────────────────────────────────── */
