@@ -76,8 +76,9 @@ const useAuthStore = create((set, get) => ({
 
   /**
    * Clear auth state from store and localStorage.
-   * Called after POST /api/auth/logout (or on failure — still clears locally),
-   * and automatically when an authenticated request returns 401.
+   * Called after successful POST /api/auth/logout, after a 401 response from
+   * /auth/logout (session already invalid on backend), and by the axios
+   * interceptor on 401 responses for other authenticated requests.
    */
   logout: () => {
     localStorage.removeItem('token');

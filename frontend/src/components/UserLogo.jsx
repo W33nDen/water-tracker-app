@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import useAuthStore from '../store/authStore';
 import UserLogoModal from './UserLogoModal';
 import SettingModal from './SettingModal';
+import UserLogoutModal from './UserLogoutModal';
 import { getInitial } from '../utils/getInitial';
 
 /**
@@ -24,7 +25,9 @@ function UserLogo() {
   const user = useAuthStore((s) => s.user);
   const [isOpen, setIsOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isLogoutOpen, setIsLogoutOpen] = useState(false);
   const containerRef = useRef(null);
+  const avatarButtonRef = useRef(null);
 
   const initial = getInitial(user);
   const displayName = user?.name ?? user?.email ?? '';
@@ -32,6 +35,7 @@ function UserLogo() {
   return (
     <div ref={containerRef} className="relative">
       <button
+        ref={avatarButtonRef}
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
         className="flex items-center gap-2 cursor-pointer focus:outline-none"
@@ -103,10 +107,18 @@ function UserLogo() {
           anchorRef={containerRef}
           onClose={() => setIsOpen(false)}
           onOpenSettings={() => setIsSettingsOpen(true)}
+          onOpenLogout={() => { setIsOpen(false); setIsLogoutOpen(true); }}
         />
       )}
 
       {isSettingsOpen && <SettingModal onClose={() => setIsSettingsOpen(false)} />}
+
+      {isLogoutOpen && (
+        <UserLogoutModal
+          onClose={() => setIsLogoutOpen(false)}
+          returnFocusRef={avatarButtonRef}
+        />
+      )}
     </div>
   );
 }
