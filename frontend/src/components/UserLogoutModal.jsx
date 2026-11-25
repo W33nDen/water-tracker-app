@@ -46,7 +46,7 @@ import api from '../services/api';
  *   • Initial focus lands on Cancel button (safe default).
  *   • Focus trap: Tab/Shift+Tab cycles between ×, Cancel, and Log out buttons.
  *   • During request (isLoading): all buttons disabled; focus is held on dialog container.
- *   • On request failure: focus returns to Log out button for quick retry.
+ *   • On request failure: focus returns deterministically to Log out button after render.
  *   • On dismiss (Cancel, ×, Escape, backdrop): focus returns to avatar button (returnFocusRef).
  *   • On successful logout: focus return is skipped (page changes).
  *   • Body scroll is locked while open and restored on unmount.
@@ -74,10 +74,21 @@ function UserLogoutModal({ onClose, returnFocusRef }) {
   // Flag to avoid returning focus when navigating away on logout
   const shouldReturnFocusRef = useRef(true);
 
+  // Flag to deterministically refocus Log out button after request failure
+  const focusLogoutAfterFailureRef = useRef(false);
+
   /* ── Initial focus on Cancel (safe default) ─────────────────────────── */
   useEffect(() => {
     cancelBtnRef.current?.focus({ preventScroll: true });
   }, []);
+
+  /* ── Refocus Log out button after request failure (post-render) ────── */
+  useEffect(() => {
+    if (!isLoading && focusLogoutAfterFailureRef.current) {
+      focusLogoutAfterFailureRef.current = false;
+      logoutBtnRef.current?.focus();
+    }
+  }, [isLoading]);
 
   /* ── Keydown listener (Escape + Focus Trap) & Body Scroll Lock ───────── */
   useEffect(() => {
@@ -113,13 +124,26 @@ function UserLogoutModal({ onClose, returnFocusRef }) {
         const first = focusable[0];
         const last = focusable[focusable.length - 1];
 
+        const active = document.activeElement;
+        const inside = dialogRef.current?.contains(active) && active !== dialogRef.current;
+
+        if (!inside) {
+          e.preventDefault();
+          if (e.shiftKey) {
+            last.focus();
+          } else {
+            first.focus();
+          }
+          return;
+        }
+
         if (e.shiftKey) {
-          if (document.activeElement === first || !dialogRef.current?.contains(document.activeElement)) {
+          if (active === first) {
             e.preventDefault();
             last.focus();
           }
         } else {
-          if (document.activeElement === last || !dialogRef.current?.contains(document.activeElement)) {
+          if (active === last) {
             e.preventDefault();
             first.focus();
           }
@@ -168,13 +192,9 @@ function UserLogoutModal({ onClose, returnFocusRef }) {
 
       // Network error or 5xx: server session might still exist.
       // Do NOT clear local state. Keep modal open so the user can retry.
+      focusLogoutAfterFailureRef.current = true;
       setIsLoading(false);
       toast.error('Logout failed. Please try again.');
-
-      // Return focus to Log out button for quick retry
-      setTimeout(() => {
-        logoutBtnRef.current?.focus();
-      }, 0);
     }
   }
 
